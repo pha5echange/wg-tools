@@ -1,14 +1,14 @@
-# wiki_edgelist_a01.py
-# Version a01
+# wiki_edgelist_a02.py
+# Version a02
 # by jmg - j.gagen*AT*gold*DOT*ac*DOT*uk
 # jmg*AT*phasechange*DOT*info
-# April 19th 2017
+# May 4th 2017
 
 # Licence: http://creativecommons.org/licenses/by-nc-sa/3.0/
 # Source code at: https://github.com/pha5echange/wg-tools
 
 # Cleans up wiki genre data
-# Reads .txt file and uses only `item' and `is subset of' components to generate unweighted, undirected edgelist
+# Reads .txt file and uses `item' (genre), and `is subset of', `is influenced by', `is based on', and `is inspired by' (properties) to generate unweighted, undirected edgelist
 
 # import packages
 import os
@@ -16,8 +16,8 @@ import sys
 import resource
 from datetime import datetime
 
-fileName = ("wiki_edgelist_a01.py")
-versionNumber = ("a01")
+fileName = ("wiki_edgelist_a02.py")
+versionNumber = ("a02")
 
 # Initiate timing of run
 runDate = datetime.now()
@@ -40,23 +40,41 @@ edgeListPath = os.path.join("data", 'wiki_edgeList_' + versionNumber + '.txt')
 edgeList = open(edgeListPath, 'w')
 
 # open rawdata inputFile for reading
-inputPath = os.path.join("rawdata", 'wiki_genres_graph.txt')
+inputPath = os.path.join("rawdata", 'wiki_genres_data.txt')
 inputFile = open (inputPath, 'r')
 
 for line in inputFile:
 
-	item, itemLabel,_image,_subclassOf, _subclassOfLabel = line.split(",")
+	itemLabel, item, subclassOf, influencedBy, basedOn, inspiredBy = line.split(",")
 	cleanItemLabel = itemLabel.replace(" ", "_").replace("'","").replace(",","").replace("u'","").replace("(","").replace(")","").strip("\n")
-	cleanSubclassOfLabel = _subclassOfLabel.replace(" ", "_").replace("'","").replace(",","").replace("u'","").replace("(","").replace(")","").strip("\n")
+	cleanSubclassOf = subclassOf.replace(" ", "_").replace("'","").replace(",","").replace("u'","").replace("(","").replace(")","").strip("\n")
+	cleanInfluencedBy = influencedBy.replace(" ", "_").replace("'","").replace(",","").replace("u'","").replace("(","").replace(")","").strip("\n")
+	cleanBasedOn = basedOn.replace(" ", "_").replace("'","").replace(",","").replace("u'","").replace("(","").replace(")","").strip("\n")
+	cleanInspiredBy = inspiredBy.replace(" ", "_").replace("'","").replace(",","").replace("u'","").replace("(","").replace(")","").strip("\n")
 
 	# check for empty item string
 	if cleanItemLabel:
 
 		# check for empty subclass string
-		if not cleanSubclassOfLabel:
-			cleanSubclassOfLabel = cleanItemLabel
+		if not cleanSubclassOf:
+			cleanSubclassOf = cleanItemLabel
 
-		edgeList.write(str(cleanItemLabel) + ',' + str(cleanSubclassOfLabel) + '\n')
+		edgeList.write(str(cleanItemLabel) + ',' + str(cleanSubclassOf) + '\n')
+
+		if not cleanInfluencedBy: 
+			cleanInfluencedBy = cleanItemLabel
+
+		edgeList.write(str(cleanItemLabel) + ',' + str(cleanInfluencedBy) + '\n')
+
+		if not cleanBasedOn: 
+			cleanBasedOn = cleanItemLabel
+
+		edgeList.write(str(cleanItemLabel) + ',' + str(cleanBasedOn) + '\n')
+
+		if not cleanInspiredBy: 
+			cleanInspiredBy= cleanItemLabel
+
+		edgeList.write(str(cleanItemLabel) + ',' + str(cleanInspiredBy) + '\n')
 
 # close inputFile
 inputFile.close()

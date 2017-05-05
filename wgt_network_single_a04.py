@@ -1,7 +1,7 @@
-# wgt_network_single_a02.py
-# Version a02
+# wgt_network_single_a04.py
+# Version a04
 # by jmg - j.gagen*AT*gold*DOT*ac*DOT*uk
-# April 21st 2017
+# May 5th 2017
 
 # Licence: http://creativecommons.org/licenses/by-nc-sa/3.0/
 
@@ -11,10 +11,13 @@
 # Writes analysis files to 'results\'
 # Writes gexf files to 'gexf\'
 # Writes image to 'networks\'
-# Added 'maxDeg' metric and 'isolated nodes' counter
 # Also renders an undirected version of the network to facilitate cluster/clique analysis
 
-# Run AFTER cleaning wiki_edgelist.py (this generates `data\wiki_edgelist.txt')
+# This version writes a list of nodes in the Largest Connected Component to 'data/nodelists'
+# Added Source- and Sink-node counter
+# Added 'maxDeg' metric and 'isolated nodes' counter
+
+# Run AFTER wiki_edgelist.py (this generates `data\wiki_edgelist.txt')
 
 # encoding=utf8
 import sys
@@ -31,7 +34,7 @@ import matplotlib.pyplot as plt
 from networkx.algorithms.approximation import clique
 from datetime import datetime
 
-versionNumber = ("a02")
+versionNumber = ("a04")
 
 # Initiate timing of run
 runDate = datetime.now()
@@ -74,7 +77,11 @@ runLog.write ("Wiki Single-Network Thing | Version " + versionNumber + '\n' + '\
 
 # Open file to write list of nodes
 nodeListPath = os.path.join("data/nodelists", 'wgt_network_' + versionNumber + '_nodeList.txt')
-nodeListOP = open (nodeListPath, 'w') 
+nodeListOP = open(nodeListPath, 'w') 
+
+# Open file for writing LCC nodes
+lccPath = os.path.join("data/nodelists", 'wgt_network_' + versionNumber + '_lcc.txt')
+lccOP = open(lccPath, 'w')
 
 # Open file for writing gexf
 gexfPath = os.path.join("gexf", 'wgt_network_' + versionNumber + '.gexf')
@@ -126,7 +133,7 @@ runLog.write ('Edges: ' + str(edges) + '\n')
 runLog.write ('Self-loops: ' + str(selfLoopTotal) + '\n')
 runLog.write ('Connections (edges minus self-loops): ' + str(connections) + '\n')
 runLog.write ('Density: ' + str(density) + '\n' + '\n')
-runLog.write (str(nodeList))
+runLog.write (str(nodeList) + '\n')
 
 anFile.write ('Network Properties: ' + '\n' + '\n')
 anFile.write ('Nodes: ' + str(nodes) + '\n')
@@ -134,7 +141,7 @@ anFile.write ('Edges: ' + str(edges) + '\n')
 anFile.write ('Self-loops: ' + str(selfLoopTotal) + '\n')
 anFile.write ('Connections (edges minus self-loops): ' + str(connections) + '\n')
 anFile.write ('Density: ' + str(density) + '\n' + '\n')
-anFile.write (str(nodeList))
+anFile.write (str(nodeList) + '\n')
 
 # Remove self-loops
 selfLoopCount = 0
@@ -164,6 +171,18 @@ for i in nodeList:
 	if nx.is_isolate(wikiDiGraph,i):
 		isolateCount += 1
 
+# Count sources and sinks
+sourceCount = 0
+sinkCount = 0
+for i in nodeList:
+	outDeg = wikiDiGraph.out_degree(i)
+	inDeg = wikiDiGraph.in_degree(i)
+	if outDeg == 0 and inDeg >= 1: 
+		sourceCount += 1
+
+	elif inDeg == 0 and outDeg >= 1:
+		sinkCount += 1
+
 # Recalculate basic graph statistics
 print ('Recalculating various things...' + '\n')
 edges = nx.number_of_edges(wikiDiGraph)
@@ -172,21 +191,27 @@ selfLoopTotal = wikiDiGraph.number_of_selfloops()
 
 print ('Nodes: ' + str(nodes))
 print ('Isolated nodes:' + str(isolateCount))
+print ('Source nodes: ' + str(sourceCount))
+print ('Sink nodes: ' + str(sinkCount))
 print ('Edges: ' + str(edges))
 print ('Self-loops: ' + str(selfLoopTotal))
 print ('Density: ' + str(density))
 print
 
-runLog.write ('Recalculated Network Properties: ' + '\n' + '\n')
+runLog.write ('\n' + 'Recalculated Network Properties: ' + '\n' + '\n')
 runLog.write ('Nodes: ' + str(nodes) + '\n')
 runLog.write ('Isolated nodes:' + str(isolateCount) + '\n')
+runLog.write ('Source nodes: ' + str(sourceCount) + '\n')
+runLog.write ('Sink nodes: ' + str(sinkCount) + '\n')
 runLog.write ('Edges: ' + str(edges) + '\n')
 runLog.write ('Self-loops: ' + str(selfLoopTotal) + '\n')
 runLog.write ('Density: ' + str(density) + '\n')
 
-anFile.write ('Recalculated Network Properties: ' + '\n' + '\n')
+anFile.write ('\n' + 'Recalculated Network Properties: ' + '\n' + '\n')
 anFile.write ('Nodes: ' + str(nodes) + '\n')
 anFile.write ('Isolated nodes:' + str(isolateCount) + '\n')
+anFile.write ('Source nodes: ' + str(sourceCount) + '\n')
+anFile.write ('Sink nodes: ' + str(sinkCount) + '\n')
 anFile.write ('Edges: ' + str(edges) + '\n')
 anFile.write ('Self-loops: ' + str(selfLoopTotal) + '\n')
 anFile.write ('Density: ' + str(density) + '\n')
@@ -201,6 +226,7 @@ for i in nodeList:
 nodeListOP.close()
 
 # Write gexf file for use in Gephi
+print
 print ("Writing gexf file... " + '\n')
 runLog.write('\n' + "Writing gexf file... " + '\n')
 nx.write_gexf(wikiDiGraph, gexfFile)
@@ -268,6 +294,41 @@ cl = sorted(list(cl), key = len, reverse = True)
 print ('Number of cliques: ' + str(len(cl)) + '\n')
 cl_sizes = [len(c) for c in cl]
 print ('Size of cliques: ' + str(cl_sizes))
+print
+
+# Find LCC nodes, print to screen and and write to file
+largeCC = max(nx.connected_components(wikiGraph), key=len)
+print
+print ("Nodes in LCC: ")
+print
+print (largeCC)
+lccOP.write(str(largeCC))
+lccOP.write('\n' + '\n' + "There are " + str(len(largeCC)) + " nodes in the LCC of this graph." + '\n')
+lccOP.close()
+print
+print ("There are " + str(len(largeCC)) + " nodes in the LCC of this graph.")
+print
+
+# Recalculate basic graph statistics
+print ('Recalculating various things...' + '\n')
+edges = nx.number_of_edges(wikiGraph)
+nodeList = nx.nodes(wikiGraph)
+nodeList.sort()
+density = nx.density(wikiGraph)
+selfLoopTotal = wikiGraph.number_of_selfloops()
+
+# Recount isolates
+isolateCount = 0
+for i in nodeList:
+	if nx.is_isolate(wikiGraph,i):
+		isolateCount += 1
+
+print ('Nodes: ' + str(nodes))
+print ('Isolated nodes:' + str(isolateCount))
+print ('Edges: ' + str(edges))
+print ('Self-loops: ' + str(selfLoopTotal))
+print ('Density: ' + str(density))
+print
 
 print ('\n' + 'Undirected Network Properties: ' + '\n')
 print ('Nodes: ' + str(nodes))
