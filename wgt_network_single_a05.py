@@ -1,19 +1,21 @@
-# wgt_network_single_a04.py
-# Version a04
+# wgt_network_single_a05.py
+# Version a05
 # by jmg - j.gagen*AT*gold*DOT*ac*DOT*uk
-# May 5th 2017
+# May 8th 2017
 
 # Licence: http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 # Plots a directed network graph (e.g. A --> is a subclass of --> B) from edgelist 'data\wiki_edgelist.txt'
 # Displays using parameters from 'config/config_nw.txt'
-# Writes 'data\wgt_network__nodeList.txt' with nodes and degrees (k)
+# Writes `data\nodelists\wgt_network__nodeList.txt' for reference
+# Writes `data\edgelists\wgt_network_edgeList.txt' for reference
 # Writes analysis files to 'results\'
 # Writes gexf files to 'gexf\'
 # Writes image to 'networks\'
 # Also renders an undirected version of the network to facilitate cluster/clique analysis
 
-# This version writes a list of nodes in the Largest Connected Component to 'data/nodelists'
+# This version culls `non-genre' nodes from the network, using a list (`rawdata/wiki_nonGenres.txt') for reference
+# This version writes a list of nodes in the Largest Connected Component to `data/nodelists' and renders a GEXF of the LCC graph
 # Added Source- and Sink-node counter
 # Added 'maxDeg' metric and 'isolated nodes' counter
 
@@ -32,9 +34,10 @@ import networkx as nx
 import community
 import matplotlib.pyplot as plt
 from networkx.algorithms.approximation import clique
+from collections import OrderedDict
 from datetime import datetime
 
-versionNumber = ("a04")
+versionNumber = ("a05")
 
 # Initiate timing of run
 runDate = datetime.now()
@@ -50,6 +53,9 @@ if not os.path.exists("data"):
 
 if not os.path.exists("data/nodelists"):
 	os.makedirs("data/nodelists")
+
+if not os.path.exists("data/edgelists"):
+	os.makedirs("data/edgelists")
 
 # Create 'gexf' subdirectories if necessary
 if not os.path.exists("gexf"):
@@ -82,6 +88,12 @@ nodeListOP = open(nodeListPath, 'w')
 # Open file for writing LCC nodes
 lccPath = os.path.join("data/nodelists", 'wgt_network_' + versionNumber + '_lcc.txt')
 lccOP = open(lccPath, 'w')
+
+# Open files to write lists of edges
+edgeListPath = os.path.join("data/edgelists", 'wgt_network_' + versionNumber + '_edgeList.txt')
+edgeListOP = open (edgeListPath, 'w') 
+edgeList2Path = os.path.join("data/edgelists", 'wgt_network_' + versionNumber + '_edgeList2.txt')
+edgeList2OP = open (edgeList2Path, 'w') 
 
 # Open file for writing gexf
 gexfPath = os.path.join("gexf", 'wgt_network_' + versionNumber + '.gexf')
@@ -143,6 +155,27 @@ anFile.write ('Connections (edges minus self-loops): ' + str(connections) + '\n'
 anFile.write ('Density: ' + str(density) + '\n' + '\n')
 anFile.write (str(nodeList) + '\n')
 
+# Remove non-genre nodes (using `rawdata/wiki_nonGenres.txt' as reference)
+# Open non-genre file
+nonGenreCount = 0
+print ('\n' + 'Checking for and removing non-genre nodes...' + '\n')
+runLog.write ('\n' + 'Checking for and removing non-genre nodes...' + '\n')
+
+nonGenrePath = os.path.join("rawdata", 'wiki_nonGenres.txt')
+nonGenreFile = open(nonGenrePath, 'r')
+nonGenres = [line.strip() for line in nonGenreFile]
+
+for i in nodeList:
+	if i in nonGenres:
+		wikiDiGraph.remove_node(i) 
+		print ('Removed non-genre node ' + str(i))
+		runLog.write ('Removed non-genre node ' + str(i) + '\n')
+		nonGenreCount += 1
+
+print ("Removed " + str(nonGenreCount) + " non-genre nodes. " + '\n')
+runLog.write ('\n' + "Removed " + str(nonGenreCount) + " non-genre nodes. " + '\n' + '\n')
+nonGenreFile.close()
+
 # Remove self-loops
 selfLoopCount = 0
 if selfLoopIP == 1:
@@ -185,9 +218,13 @@ for i in nodeList:
 
 # Recalculate basic graph statistics
 print ('Recalculating various things...' + '\n')
+nodes = nx.number_of_nodes(wikiDiGraph)
 edges = nx.number_of_edges(wikiDiGraph)
 density = nx.density(wikiDiGraph)
+nodeList = nx.nodes(wikiDiGraph)
+nodeList.sort()
 selfLoopTotal = wikiDiGraph.number_of_selfloops()
+isDag = nx.is_directed_acyclic_graph(wikiDiGraph)
 
 print ('Nodes: ' + str(nodes))
 print ('Isolated nodes:' + str(isolateCount))
@@ -196,6 +233,7 @@ print ('Sink nodes: ' + str(sinkCount))
 print ('Edges: ' + str(edges))
 print ('Self-loops: ' + str(selfLoopTotal))
 print ('Density: ' + str(density))
+print('Is DAG? ' + str(isDag))
 print
 
 runLog.write ('\n' + 'Recalculated Network Properties: ' + '\n' + '\n')
@@ -217,13 +255,26 @@ anFile.write ('Self-loops: ' + str(selfLoopTotal) + '\n')
 anFile.write ('Density: ' + str(density) + '\n')
 
 # Write file with nodes and degree,for reference
-print ('\n' + 'Writing node list with degree...' + '\n')
+print ('\n' + 'Writing node list with degree and neighbours...' + '\n')
 for i in nodeList:
 	nodeDegree = wikiDiGraph.degree(i)
-	nodeListOP.write(str(i) + ',' + str(nodeDegree) +'\n')
+	neighboursList = list(nx.all_neighbors(wikiDiGraph, i))
+	nodeListOP.write(str(i) + ',' + str(nodeDegree) + ',' + str(neighboursList) + '\n')
+	#nodeListOP.write(str(i) + ',' + str(nodeDegree) + '\n')
 	print ("Node " + str(i) + " degree: " + str(nodeDegree))
+	print ("Neighbours: " + str(neighboursList))
 
 nodeListOP.close()
+
+# Write file with edges
+edgeList = wikiDiGraph.edges()
+
+for i in edgeList:
+	nodesStr = str(i).replace("u'","").replace("'","").replace("(","").replace(")","").replace(" ","")
+	nodeU, nodeV = nodesStr.split(",")
+	edgeListOP.write(nodesStr + '\n')
+
+edgeListOP.close()
 
 # Write gexf file for use in Gephi
 print
@@ -311,11 +362,22 @@ print
 
 # Recalculate basic graph statistics
 print ('Recalculating various things...' + '\n')
+nodes = nx.number_of_nodes(wikiDiGraph)
 edges = nx.number_of_edges(wikiGraph)
 nodeList = nx.nodes(wikiGraph)
 nodeList.sort()
 density = nx.density(wikiGraph)
 selfLoopTotal = wikiGraph.number_of_selfloops()
+
+# Write file with edges
+edgeList2 = wikiGraph.edges()
+
+for i in edgeList2:
+	nodesStr = str(i).replace("u'","").replace("'","").replace("(","").replace(")","").replace(" ","")
+	nodeU, nodeV = nodesStr.split(",")
+	edgeList2OP.write(nodesStr + '\n')
+
+edgeList2OP.close()
 
 # Recount isolates
 isolateCount = 0
