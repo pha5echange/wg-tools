@@ -1,8 +1,8 @@
-# wiki_edgelist_a02.py
-# Version a02
+# wiki_edgelist_a03.py
+# Version a03
 # by jmg - j.gagen*AT*gold*DOT*ac*DOT*uk
 # jmg*AT*phasechange*DOT*info
-# May 4th 2017
+# May 10th 2017
 
 # Licence: http://creativecommons.org/licenses/by-nc-sa/3.0/
 # Source code at: https://github.com/pha5echange/wg-tools
@@ -17,7 +17,7 @@ import resource
 from datetime import datetime
 
 fileName = ("wiki_edgelist_a02.py")
-versionNumber = ("a02")
+versionNumber = ("a03")
 
 # Initiate timing of run
 runDate = datetime.now()
@@ -32,7 +32,7 @@ if not os.path.exists("logs"):
     os.makedirs("logs")
 
 # open file for writing log
-logPath = os.path.join("logs", str(runDate) + '_' + str(startTime) + '_' + 'wiki_edgelist_' + versionNumber + '_log.txt')
+logPath = os.path.join("logs", 'wiki_edgelist_' + versionNumber + '_' + str(runDate) + '_' + str(startTime) + '_log.txt')
 runLog = open(logPath, 'a')
 
 # open edgeList file for data output

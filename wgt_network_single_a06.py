@@ -1,7 +1,7 @@
-# wgt_network_single_a05.py
-# Version a05
+# wgt_network_single_a06.py
+# Version a06
 # by jmg - j.gagen*AT*gold*DOT*ac*DOT*uk
-# May 8th 2017
+# May 10th 2017
 
 # Licence: http://creativecommons.org/licenses/by-nc-sa/3.0/
 
@@ -37,7 +37,7 @@ from networkx.algorithms.approximation import clique
 from collections import OrderedDict
 from datetime import datetime
 
-versionNumber = ("a05")
+versionNumber = ("a06")
 
 # Initiate timing of run
 runDate = datetime.now()
@@ -61,6 +61,9 @@ if not os.path.exists("data/edgelists"):
 if not os.path.exists("gexf"):
 	os.makedirs("gexf")
 
+if not os.path.exists("gexf/lcc"):
+	os.makedirs("gexf/lcc")
+
 # Create 'results' subdirectories if necessary
 if not os.path.exists("results"):
 	os.makedirs("results")
@@ -73,7 +76,7 @@ if not os.path.exists("networks"):
     os.makedirs("networks")
 
 # Open file for writing log
-logPath = os.path.join("logs", str(runDate) + '_' + str(startTime) + '_' + 'wgt_network_single_' + versionNumber + '_log.txt')
+logPath = os.path.join("logs", 'wgt_network_single_' + versionNumber  + '_' + str(runDate) + '_' + str(startTime) + '_log.txt')
 runLog = open(logPath, 'a')
 
 # Begin
@@ -85,7 +88,7 @@ runLog.write ("Wiki Single-Network Thing | Version " + versionNumber + '\n' + '\
 nodeListPath = os.path.join("data/nodelists", 'wgt_network_' + versionNumber + '_nodeList.txt')
 nodeListOP = open(nodeListPath, 'w') 
 
-# Open file for writing LCC nodes
+# Open file for writing LCC node list
 lccPath = os.path.join("data/nodelists", 'wgt_network_' + versionNumber + '_lcc.txt')
 lccOP = open(lccPath, 'w')
 
@@ -95,9 +98,12 @@ edgeListOP = open (edgeListPath, 'w')
 edgeList2Path = os.path.join("data/edgelists", 'wgt_network_' + versionNumber + '_edgeList2.txt')
 edgeList2OP = open (edgeList2Path, 'w') 
 
-# Open file for writing gexf
+# Open files for writing gexfs
 gexfPath = os.path.join("gexf", 'wgt_network_' + versionNumber + '.gexf')
 gexfFile = open(gexfPath, 'w')
+
+gexfLccPath = os.path.join("gexf/lcc", 'wgt_lcc_' + versionNumber + '.gexf')
+gexfLccFile = open(gexfLccPath, 'w')
 
 # Open file for analysis results
 anPath = os.path.join("results/analysis", 'wgt_network_' + versionNumber + '_analysis.txt')
@@ -158,8 +164,8 @@ anFile.write (str(nodeList) + '\n')
 # Remove non-genre nodes (using `rawdata/wiki_nonGenres.txt' as reference)
 # Open non-genre file
 nonGenreCount = 0
-print ('\n' + 'Checking for and removing non-genre nodes...' + '\n')
-runLog.write ('\n' + 'Checking for and removing non-genre nodes...' + '\n')
+print ('Checking for and removing non-genre nodes...' + '\n' + '\n')
+runLog.write ('\n' + 'Checking for and removing non-genre nodes...' + '\n' + '\n')
 
 nonGenrePath = os.path.join("rawdata", 'wiki_nonGenres.txt')
 nonGenreFile = open(nonGenrePath, 'r')
@@ -179,8 +185,8 @@ nonGenreFile.close()
 # Remove self-loops
 selfLoopCount = 0
 if selfLoopIP == 1:
-	print ('\n' + 'Checking for and removing self-loops...' + '\n')
-	runLog.write('\n' + '\n' + 'Checking for and removing self-loops...' + '\n')
+	print ('Checking for and removing self-loops...' + '\n')
+	runLog.write('\n' + 'Checking for and removing self-loops...' + '\n')
 	for u,v in wikiDiGraph.edges():
 		if u == v:
 			wikiDiGraph.remove_edge(u,v)
@@ -347,7 +353,7 @@ cl_sizes = [len(c) for c in cl]
 print ('Size of cliques: ' + str(cl_sizes))
 print
 
-# Find LCC nodes, print to screen and and write to file
+# Find LCC nodes, print to screen and and write list to file
 largeCC = max(nx.connected_components(wikiGraph), key=len)
 print
 print ("Nodes in LCC: ")
@@ -358,6 +364,42 @@ lccOP.write('\n' + '\n' + "There are " + str(len(largeCC)) + " nodes in the LCC 
 lccOP.close()
 print
 print ("There are " + str(len(largeCC)) + " nodes in the LCC of this graph.")
+print
+
+# Render GEXF file of LCC
+print
+print ("Writing gexf file of LCC... " + '\n')
+runLog.write('\n' + "Writing gexf file of LCC... " + '\n')
+lccSub = max(nx.connected_component_subgraphs(wikiGraph), key=len)
+nx.write_gexf(lccSub, gexfLccFile)
+gexfLccFile.close()
+
+# Analysis of LCC
+print ('\n' + 'Analysing LCC...' + '\n')
+lccNodes = nx.number_of_nodes(lccSub)
+lccEdges = nx.number_of_edges(lccSub)
+lccDegreeSeq = sorted(nx.degree(lccSub).values(),reverse=True)
+lccMaxDeg = max(lccDegreeSeq)
+lccDensity = nx.density(lccSub)
+lccAvClustering = nx.average_clustering(lccSub)
+lccCl = nx.find_cliques(lccSub)
+lccCl = sorted(list(lccCl), key = len, reverse = True)
+lccCl_sizes = [len(c) for c in lccCl]
+
+print ('LCC Nodes: ' + str(lccNodes))
+anFile.write('LCC Nodes: ' + str(lccNodes) + '\n')
+print ('LCC Edges: ' + str(lccEdges))
+anFile.write('LCC Edges: ' + str(lccEdges) + '\n')
+print ('LCC Density: ' + str(lccDensity))
+anFile.write('LCC Density: ' + str(lccDensity) + '\n')
+print ('Maximal degree of LCC: ' + str(lccMaxDeg) + '\n')
+anFile.write ('Maximal degree of LCC: ' + str(lccMaxDeg) + '\n')
+print ('ACC of LCC: ' + str(lccAvClustering))
+anFile.write('ACC of LCC: ' + str(lccAvClustering) + '\n')
+print ('Number of cliques in LCC: ' + str(len(lccCl)) + '\n')
+anFile.write ('Number of cliques in LCC: ' + str(len(lccCl)) + '\n' + '\n')
+print ('Size of LCC cliques: ' + str(lccCl_sizes))
+anFile.write ('Size of LCC cliques: ' + str(lccCl_sizes) + '\n')
 print
 
 # Recalculate basic graph statistics
