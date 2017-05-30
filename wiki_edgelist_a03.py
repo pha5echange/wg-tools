@@ -8,7 +8,7 @@
 # Source code at: https://github.com/pha5echange/wg-tools
 
 # Cleans up wiki genre data
-# Reads .txt file and uses `item' (genre), and `is subset of', `is influenced by', `is based on', and `is inspired by' (properties) to generate unweighted, undirected edgelist
+# Reads .txt file and uses `item' (genre), and `is subset of', `is influenced by', `is based on', and `is inspired by' (properties) to generate unweighted edgelist
 
 # import packages
 import os

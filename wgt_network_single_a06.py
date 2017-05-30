@@ -404,7 +404,7 @@ print
 
 # Recalculate basic graph statistics
 print ('Recalculating various things...' + '\n')
-nodes = nx.number_of_nodes(wikiDiGraph)
+nodes = nx.number_of_nodes(wikiGraph)
 edges = nx.number_of_edges(wikiGraph)
 nodeList = nx.nodes(wikiGraph)
 nodeList.sort()
