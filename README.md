@@ -2,9 +2,9 @@
 
 Tools for processing Wikidata genre data. 
 
-Requires Python 2.7, the `numpy' library, the `networkx' library, the `community' library, andthe `matplotlib' library. 
+Requires Python 2.7, the 'numpy' library, the 'networkx' library, the 'community' library, and the 'matplotlib' library. 
 
-The file `rawdata/wiki_genres_data.txt' must be present. 
+The file 'rawdata/wiki_genres_data.txt' must be present. 
 This contains a list of genres and sub-genre relationships, generated via a query to the Wikidata public query service: 
 
 https://query.wikidata.org
@@ -19,5 +19,3 @@ WHERE {
   OPTIONAL { ?item wdt:P144 ?based_on. }
   OPTIONAL { ?item wdt:P941 ?inspired_by. }
 }
-
-
