@@ -1,14 +1,14 @@
-# wiki_edgelist_a03.py
-# Version a03
+# wiki_edgelist_a05.py
+# Version a05
 # by jmg - j.gagen*AT*gold*DOT*ac*DOT*uk
 # jmg*AT*phasechange*DOT*info
-# May 10th 2017
+# Sep 21st 2017
 
 # Licence: http://creativecommons.org/licenses/by-nc-sa/3.0/
 # Source code at: https://github.com/pha5echange/wg-tools
 
 # Cleans up wiki genre data
-# Reads .txt file and uses `item' (genre), and `is subset of', `is influenced by', `is based on', and `is inspired by' (properties) to generate unweighted edgelist
+# Reads .txt file and uses `item' (genre), and `is subset of' (property) to generate unweighted edgelist
 
 # import packages
 import os
@@ -16,8 +16,8 @@ import sys
 import resource
 from datetime import datetime
 
-fileName = ("wiki_edgelist_a02.py")
-versionNumber = ("a03")
+fileName = ("wiki_edgelist_a05.py")
+versionNumber = ("a05")
 
 # Initiate timing of run
 runDate = datetime.now()
@@ -35,9 +35,12 @@ if not os.path.exists("logs"):
 logPath = os.path.join("logs", 'wiki_edgelist_' + versionNumber + '_' + str(runDate) + '_' + str(startTime) + '_log.txt')
 runLog = open(logPath, 'a')
 
-# open edgeList file for data output
+# open edgeList files for data output
 edgeListPath = os.path.join("data", 'wiki_edgeList_' + versionNumber + '.txt')
 edgeList = open(edgeListPath, 'w')
+
+cleanEdgeListPath = os.path.join("data", 'wiki_edgeList.txt')
+cleanEdgeList = open(cleanEdgeListPath, 'w')
 
 # open rawdata inputFile for reading
 inputPath = os.path.join("rawdata", 'wiki_genres_data.txt')
@@ -79,18 +82,17 @@ for line in inputFile:
 # close inputFile
 inputFile.close()
 
-'''
 # Remove duplicates
 lines = open(edgeListPath, 'r').readlines()
 lines_set = set(lines)
-out = open(edgeListPath, 'w')
+out = open(cleanEdgeListPath, 'w')
 
 for line in sorted(lines_set):
 	out.write(line)
-'''
 
-# close edgeList
+# close edgeLists
 edgeList.close()
+cleanEdgeList.close()
 
 # end timing of run
 endTime = datetime.now()
