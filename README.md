@@ -5,9 +5,14 @@ Tools for processing Wikidata genre data.
 Requires Python 2.7, the 'numpy' library, the 'networkx' library, the 'community' library, and the 'matplotlib' library. 
 
 The file 'rawdata/wiki_genres_data.txt' must be present. 
-This contains a list of genres and sub-genre relationships, generated via a query to the Wikidata public query service:
-https://query.wikidata.org
+This contains a list of genres and sub-genre relationships, generated via a query to the Wikidata public query service: https://query.wikidata.org
 
+- 'wiki_edgelist.py' generates an edge-list from 'rawdata/wiki_genres_data.txt'
+
+- 'wgt_network_single.py' builds a network from the edge-list created above. 
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 SPARQL query example (Music genres)
 
